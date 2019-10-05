@@ -1,0 +1,24 @@
+sudo: required
+
+language: go
+
+go:
+  - master
+
+services:
+  - docker
+
+branches:
+  only:
+  - master
+  - /^v.*$/
+
+before_install:
+  - echo "start CI."
+
+script:
+  - make test-in-docker
+
+after_success:
+  # - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+  # - make push-image
