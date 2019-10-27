@@ -66,7 +66,7 @@ func (f *File) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadR
 }
 
 func (f *File) ReadAll(ctx context.Context) ([]byte, error) {
-	return []byte("hello world."), nil
+	return f.getData(f.inode)
 }
 
 func (f *File) Remove(ctx context.Context, req *fuse.RemoveRequest) error {

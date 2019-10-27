@@ -34,9 +34,17 @@ func (fh *FileHandle) Read(ctx context.Context, req *fuse.ReadRequest, resp *fus
 
 // Write to the file handle
 func (fh *FileHandle) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.WriteResponse) error {
-	fh.log().Debugf("Write %+v", resp)
+	fh.log().Debugf("Write %+v", req)
 
+	fh.writeData(fh.inode, req.Data)
+
+	attr, _ := fh.getMetadata(fh.inode)
+	attr.Size = uint64(len(req.Data))
+	// req.
+	fh.putMetadata(attr)
 	resp.Size = len(req.Data)
+	fh.log().Debugf("Write %s", req.Data)
+
 	return fh.writeData(fh.inode, req.Data)
 }
 
@@ -49,6 +57,7 @@ func (fh *FileHandle) Release(ctx context.Context, req *fuse.ReleaseRequest) err
 // Flush - experimenting with uploading at flush, this slows operations down till it has been
 // completely flushed
 func (fh *FileHandle) Flush(ctx context.Context, req *fuse.FlushRequest) error {
+
 	fh.log().Debugf("Flush %+v", req)
 	return nil
 }

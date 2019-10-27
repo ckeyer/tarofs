@@ -21,11 +21,14 @@ const (
 )
 
 type Metadata struct {
-	db *leveldb.DB
+	mlog *logrus.Logger
+	db   *leveldb.DB
 }
 
 func NewMetadataSvr(db *leveldb.DB) Metadata {
-	return Metadata{db: db}
+	m := Metadata{db: db, mlog: logrus.New()}
+	m.mlog.SetLevel(logrus.WarnLevel)
+	return m
 }
 
 func jsonEncode(val interface{}) []byte {
@@ -173,5 +176,6 @@ func (f *Metadata) dblog(err ...error) *logrus.Entry {
 	if len(err) > 0 && err[0] != nil {
 		fields["error"] = err[0]
 	}
-	return logrus.WithFields(fields)
+
+	return f.mlog.WithFields(fields)
 }

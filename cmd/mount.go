@@ -25,6 +25,7 @@ func MoundCmd() *cobra.Command {
 		Aliases: []string{"m"},
 		Short:   "mount tarofs to a directory.",
 		PreRun: func(cmd *cobra.Command, args []string) {
+			logrus.SetFormatter(&logrus.JSONFormatter{})
 			if err := checkDir(mountpoint); err != nil {
 				logrus.Fatalf("check mountpoint faield, %s", err)
 			}

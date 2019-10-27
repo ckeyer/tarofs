@@ -11,7 +11,7 @@ func (f *Metadata) get(key string, ret interface{}) error {
 	if err != nil {
 		f.dblog(err).
 			WithField("key", key).
-			Error("get failed.")
+			Infof("get failed.")
 		return err
 	}
 	f.dblog().
