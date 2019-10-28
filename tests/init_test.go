@@ -13,39 +13,38 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
-var (
-	leveldir, mountpoint string
-)
-
 type AppSuite struct {
 	suite.Suite
 
 	conn *fuse.Conn
 	db   *leveldb.DB
-}
 
-func init() {
-	batch := time.Now().Format("0102T150405")
-	leveldir = filepath.Join(os.TempDir(), batch, "leveldb")
-	mountpoint = filepath.Join(os.TempDir(), batch, "taro")
+	leveldir, mountpoint string
 }
 
 func TestSuite(t *testing.T) {
-	suite.Run(t, new(AppSuite))
+	batch := time.Now().Format("0102T150405")
+	as := &AppSuite{
+		leveldir:   filepath.Join(os.TempDir(), batch, "leveldb"),
+		mountpoint: filepath.Join(os.TempDir(), batch, "taro"),
+	}
+	suite.Run(t, as)
 }
 
 // SetupSuite setup
 func (a *AppSuite) SetupSuite() {
-	for _, path := range []string{leveldir, mountpoint} {
+	for _, path := range []string{a.leveldir, a.mountpoint} {
 		if err := os.MkdirAll(path, 0755); err != nil {
-			logrus.Fatalf("mkdir %s failed, %s", path, err)
+			a.Suite.Failf("SetupSuite Failed", "mkdir %s failed, %s", path, err)
+			return
 		}
 	}
 
 	var err error
 	a.db, err = leveldb.OpenFile(leveldir, nil)
 	if err != nil {
-		logrus.Fatalf("open leveldb failed, %s", err)
+		a.Suite.Failf("SetupSuite Failed", "open leveldb failed, %s", err)
+		return
 	}
 	a.logf("open leveldb at %s successful.", leveldir)
 
@@ -83,15 +82,15 @@ func (a *AppSuite) TearDownSuite() {
 	// os.RemoveAll(leveldir)
 }
 
-func (a *AppSuite) log(args ...interface{}) {
+func (a *AppSuite) Log(args ...interface{}) {
 	a.Suite.T().Log(args...)
 }
-func (a *AppSuite) logf(format string, args ...interface{}) {
+func (a *AppSuite) Logf(format string, args ...interface{}) {
 	a.Suite.T().Logf(format, args...)
 }
-func (a *AppSuite) err(args ...interface{}) {
+func (a *AppSuite) Err(args ...interface{}) {
 	a.Suite.T().Error(args...)
 }
-func (a *AppSuite) errf(format string, args ...interface{}) {
+func (a *AppSuite) Errf(format string, args ...interface{}) {
 	a.Suite.T().Errorf(format, args...)
 }
