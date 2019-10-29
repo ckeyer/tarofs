@@ -15,4 +15,11 @@ type MetadataStorager interface {
 type DataStorager interface {
 	Bytes(key string) ([]byte, error)
 	PutBytes(key string, val []byte) error
+	Delete(key string) error
+}
+
+type SimpleStorager interface {
+	Bytes(key string) ([]byte, error)
+	PutBytes(key string, val []byte) error
+	Delete(key string) error
 }
