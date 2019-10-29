@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ckeyer/tarofs/pkgs/levelfs"
+	"github.com/ckeyer/tarofs/pkgs/fs"
+	"github.com/ckeyer/tarofs/pkgs/storage/levelfs"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/syndtr/goleveldb/leveldb"
 )
 
 func init() {
@@ -16,8 +16,8 @@ func init() {
 
 func MoundCmd() *cobra.Command {
 	var (
-		mountpoint string
-		leveldir   string
+		mountDir string
+		leveldir string
 	)
 
 	cmd := &cobra.Command{
@@ -26,38 +26,39 @@ func MoundCmd() *cobra.Command {
 		Short:   "mount tarofs to a directory.",
 		PreRun: func(cmd *cobra.Command, args []string) {
 			logrus.SetFormatter(&logrus.JSONFormatter{})
-			if err := checkDir(mountpoint); err != nil {
-				logrus.Fatalf("check mountpoint faield, %s", err)
+			if err := checkDir(mountDir); err != nil {
+				logrus.Fatalf("check mountDir faield, %s", err)
 			}
 			if err := checkDir(leveldir); err != nil {
 				logrus.Fatalf("check leveldir faield, %s", err)
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			db, err := leveldb.OpenFile(leveldir, nil)
+			stgr, err := levelfs.NewLevelStorage(leveldir)
 			if err != nil {
-				logrus.Fatalf("open leveldb failed, %s", err)
+				logrus.Fatalf("new levelfs storage failed, %s", err)
+				return
 			}
 
-			c, err := levelfs.Mount(mountpoint)
+			c, err := fs.Mount(mountDir)
 			if err != nil {
 				logrus.Fatal("mount falied, ", err)
 			}
 			defer c.Close()
-			logrus.Infof("mount %s successful.", mountpoint)
+			logrus.Infof("mount %s successful.", mountDir)
 
 			go waitExec(func() {
-				if err := levelfs.Umount(mountpoint); err != nil {
-					logrus.Fatalf("umount %s failed, %s", mountpoint, err)
+				if err := fs.Umount(mountDir); err != nil {
+					logrus.Fatalf("umount %s failed, %s", mountDir, err)
 				}
-				logrus.Fatalf("umount %s successful.", mountpoint)
+				logrus.Fatalf("umount %s successful.", mountDir)
 			})
 
 			if p := c.Protocol(); !p.HasInvalidate() {
 				logrus.Fatalf("kernel FUSE support is too old to have invalidations: version %v", p)
 			}
 
-			filesys := levelfs.NewFS(c, db)
+			filesys := fs.NewFS(c, stgr, stgr)
 			if err := filesys.Serve(); err != nil {
 				logrus.Fatal("start file system serve failed, ", err)
 			}
@@ -70,7 +71,7 @@ func MoundCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&mountpoint, "mount-point", "m", "/tmp/tarofs", "mount point directory.")
+	cmd.Flags().StringVarP(&mountDir, "mount-point", "m", "/tmp/tarofs", "mount point directory.")
 	cmd.Flags().StringVarP(&leveldir, "leveldb-dir", "l", "/data/tarofs_data", "leveldb data directory.")
 	return cmd
 }
