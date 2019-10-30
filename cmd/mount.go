@@ -39,35 +39,30 @@ func MoundCmd() *cobra.Command {
 				logrus.Fatalf("new levelfs storage failed, %s", err)
 				return
 			}
-
-			c, err := fs.Mount(mountDir)
+			filesys, err := fs.NewFS(mountDir, stgr, stgr)
 			if err != nil {
-				logrus.Fatal("mount falied, ", err)
+				logrus.Fatal("new mount falied, ", err)
 			}
-			defer c.Close()
-			logrus.Infof("mount %s successful.", mountDir)
+			// c, err := fs.Mount(mountDir)
+
+			// defer c.Close()
+			// logrus.Infof("mount %s successful.", mountDir)
 
 			go waitExec(func() {
-				if err := fs.Umount(mountDir); err != nil {
+				if err := filesys.Close(); err != nil {
 					logrus.Fatalf("umount %s failed, %s", mountDir, err)
 				}
 				logrus.Fatalf("umount %s successful.", mountDir)
 			})
 
-			if p := c.Protocol(); !p.HasInvalidate() {
-				logrus.Fatalf("kernel FUSE support is too old to have invalidations: version %v", p)
-			}
+			// if p := c.Protocol(); !p.HasInvalidate() {
+			// 	logrus.Fatalf("kernel FUSE support is too old to have invalidations: version %v", p)
+			// }
 
-			filesys := fs.NewFS(c, stgr, stgr)
 			if err := filesys.Serve(); err != nil {
 				logrus.Fatal("start file system serve failed, ", err)
 			}
 
-			// Check if the mount process has an error to report.
-			<-c.Ready
-			if err := c.MountError; err != nil {
-				logrus.Fatal("mount file system failed, ", err)
-			}
 		},
 	}
 

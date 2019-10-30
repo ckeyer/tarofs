@@ -6,18 +6,15 @@ import (
 	"testing"
 	"time"
 
-	"bazil.org/fuse"
-	"github.com/ckeyer/tarofs/pkgs/levelfs"
+	"github.com/ckeyer/tarofs/pkgs/fs"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
-	"github.com/syndtr/goleveldb/leveldb"
 )
 
 type AppSuite struct {
 	suite.Suite
 
-	conn *fuse.Conn
-	db   *leveldb.DB
+	fs *fs.FS
 
 	leveldir, mountpoint string
 }
@@ -40,25 +37,11 @@ func (a *AppSuite) SetupSuite() {
 		}
 	}
 
-	var err error
-	a.db, err = leveldb.OpenFile(leveldir, nil)
-	if err != nil {
-		a.Suite.Failf("SetupSuite Failed", "open leveldb failed, %s", err)
-		return
-	}
-	a.logf("open leveldb at %s successful.", leveldir)
-
-	a.conn, err = levelfs.Mount(mountpoint)
-	if err != nil {
-		logrus.Fatal("mount falied, ", err)
-	}
-	a.logf("mount %s successful.", mountpoint)
-
 	if p := a.conn.Protocol(); !p.HasInvalidate() {
 		logrus.Fatalf("kernel FUSE support is too old to have invalidations: version %v", p)
 	}
 
-	filesys := levelfs.NewFS(a.conn, a.db)
+	filesys := fs.NewFS(a.conn, a.db)
 	go func() {
 		if err := filesys.Serve(); err != nil {
 			logrus.Fatal("start file system serve failed, ", err)
@@ -75,7 +58,7 @@ func (a *AppSuite) SetupSuite() {
 
 // TearDownSuite tear down
 func (a *AppSuite) TearDownSuite() {
-	levelfs.Umount(mountpoint)
+	fs.Umount(mountpoint)
 	a.conn.Close()
 	a.db.Close()
 	// os.RemoveAll(mountpoint)

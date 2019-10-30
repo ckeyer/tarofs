@@ -26,21 +26,50 @@ const (
 type FS struct {
 	metadataStorager storage.MetadataStorager
 	dataStorager     storage.DataStorager
-	srv              *fs.Server
+
+	mountDir string
+
+	conn *fuse.Conn
+	srv  *fs.Server
 }
 
-func NewFS(conn *fuse.Conn, ms storage.MetadataStorager, ds storage.DataStorager) *FS {
+func NewFS(mountDir string, ms storage.MetadataStorager, ds storage.DataStorager) (*FS, error) {
+	conn, err := Mount(mountDir)
+	if err != nil {
+		return nil, fmt.Errorf("mount falied, %v", err)
+	}
+	logrus.Infof("mount %s successful.", mountDir)
+
+	if p := conn.Protocol(); !p.HasInvalidate() {
+		return nil, fmt.Errorf("kernel FUSE support is too old to have invalidations: version %v", p)
+	}
+
 	return &FS{
 		metadataStorager: ms,
 		dataStorager:     ds,
-		srv:              fs.New(conn, nil),
-	}
+		mountDir:         mountDir,
+
+		conn: conn,
+		srv:  fs.New(conn, nil),
+	}, nil
 }
 
 // Serve
 func (f *FS) Serve() error {
 	logrus.Debug("start levelfs server.")
 	return f.srv.Serve(f)
+
+	// Check if the mount process has an error to report.
+	<-f.conn.Ready
+	if err := f.conn.MountError; err != nil {
+		return fmt.Errorf("mount file system failed, %s", err)
+	}
+	return nil
+}
+
+func (f *FS) Close() error {
+	defer f.conn.Close()
+	return Umount(f.mountDir)
 }
 
 var _ fs.FS = (*FS)(nil)
