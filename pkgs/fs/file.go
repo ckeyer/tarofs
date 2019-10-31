@@ -14,6 +14,7 @@ import (
 type File struct {
 	*FS
 
+	flogger *logrus.Logger
 	// fs.NodeRef
 	inode  uint64
 	path   string
@@ -81,6 +82,11 @@ func (f *File) Handler() fs.Handle {
 }
 
 func (f *File) log(err ...error) *logrus.Entry {
+	if f.flogger == nil {
+		f.flogger = logrus.New()
+		f.flogger.Formatter = new(logrus.JSONFormatter)
+		f.flogger.SetLevel(logrus.WarnLevel)
+	}
 	fields := logrus.Fields{
 		"path":   f.path,
 		"inode":  f.inode,
@@ -90,5 +96,5 @@ func (f *File) log(err ...error) *logrus.Entry {
 	if len(err) > 0 && err[0] != nil {
 		fields["error"] = err[0]
 	}
-	return logrus.WithFields(fields)
+	return f.flogger.WithFields(fields)
 }

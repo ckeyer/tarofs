@@ -15,8 +15,9 @@ import (
 type Dir struct {
 	*FS
 
-	inode uint64
-	path  string
+	dirLogger *logrus.Logger
+	inode     uint64
+	path      string
 }
 
 var _ fs.Node = (*Dir)(nil)
@@ -208,6 +209,11 @@ func (d *Dir) Remove(ctx context.Context, req *fuse.RemoveRequest) error {
 }
 
 func (d *Dir) log(err ...error) *logrus.Entry {
+	if d.dirLogger == nil {
+		d.dirLogger = logrus.New()
+		d.dirLogger.Formatter = new(logrus.JSONFormatter)
+		d.dirLogger.SetLevel(logrus.WarnLevel)
+	}
 	fields := logrus.Fields{
 		"path":   d.path,
 		"inode":  d.inode,
@@ -217,7 +223,7 @@ func (d *Dir) log(err ...error) *logrus.Entry {
 	if len(err) > 0 && err[0] != nil {
 		fields["error"] = err[0]
 	}
-	return logrus.WithFields(fields)
+	return d.dirLogger.WithFields(fields)
 }
 
 // listChildrenMetadata
