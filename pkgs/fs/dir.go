@@ -76,7 +76,7 @@ func (d *Dir) Setattr(ctx context.Context, req *fuse.SetattrRequest, resp *fuse.
 func (d *Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 	d.log().Debugf("Lookup %+v", name)
 	fullpath := filepath.Join(d.path, name)
-	inode, err := d.getINode(fullpath)
+	inode, err := d.getPath(fullpath)
 	if err != nil {
 		return nil, fuse.ENOENT
 	}
@@ -138,7 +138,7 @@ func (d *Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error
 	)
 	d.log().Debugf("req.mode: %s, attr.mode: %s", req.Mode.String(), attr.Mode.String())
 
-	if err := d.putINode(fullpath, inode); err != nil {
+	if err := d.putPath(fullpath, inode); err != nil {
 		d.log(err).Errorf("put inode %s failed, %+v", fullpath, inode)
 		return nil, err
 	}
@@ -179,7 +179,7 @@ func (d *Dir) Create(ctx context.Context, req *fuse.CreateRequest, resp *fuse.Cr
 	d.log().Debugf("Create %s request: %+v", req.Name, req)
 	d.log().Debugf("Create %s attr: %+v", req.Name, attr)
 
-	if err := d.putINode(fullpath, inode); err != nil {
+	if err := d.putPath(fullpath, inode); err != nil {
 		d.log(err).Errorf("put inode %s failed, %+v", fullpath, inode)
 		return f, f, err
 	}
@@ -229,7 +229,7 @@ func (f *FS) listChildrenMetadata(parent string) (map[string]*fuse.Attr, error) 
 
 	inodes := map[string]uint64{}
 	for _, name := range children {
-		inode, err := f.getINode(filepath.Join(parent, name))
+		inode, err := f.getPath(filepath.Join(parent, name))
 		if err != nil {
 			return nil, err
 		}

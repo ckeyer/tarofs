@@ -165,19 +165,19 @@ func (f *FS) remove(ctx context.Context, req *fuse.RemoveRequest, parent string)
 	}
 
 	fullname := filepath.Join(parent, req.Name)
-	inode, err := f.getINode(fullname)
+	inode, err := f.getPath(fullname)
 	if err != nil {
 		logrus.Errorf("remove file, get inode %s faield, %s", fullname, children)
 		return fuse.ENOENT
 	}
 
-	f.deleteINode(fullname)
+	f.deletePath(fullname)
 	f.deleteMetadata(inode)
 
 	return nil
 }
 
-func (f *FS) getINode(path string) (uint64, error) {
+func (f *FS) getPath(path string) (uint64, error) {
 	key := PrefixINode + path
 	var inode uint64
 	err := f.metadataStorager.Get(key, &inode)
@@ -187,7 +187,7 @@ func (f *FS) getINode(path string) (uint64, error) {
 	return inode, nil
 }
 
-func (f *FS) putINode(path string, inode uint64) error {
+func (f *FS) putPath(path string, inode uint64) error {
 	key := PrefixINode + path
 	err := f.metadataStorager.Get(key, nil)
 	if err == nil {
@@ -199,8 +199,8 @@ func (f *FS) putINode(path string, inode uint64) error {
 	return f.metadataStorager.Put(key, inode)
 }
 
-// deleteINode
-func (f *FS) deleteINode(path string) error {
+// deletePath
+func (f *FS) deletePath(path string) error {
 	key := PrefixINode + path
 	return f.metadataStorager.Delete(key)
 }
@@ -267,6 +267,7 @@ func (f *FS) writeData(inode uint64, val []byte) error {
 	key := PrefixData + fmt.Sprint(inode)
 	return f.dataStorager.PutBytes(key, val)
 }
+
 func getLogFilePath() string {
 	_, file, line, _ := runtime.Caller(2)
 	file = strings.TrimPrefix(file, os.Getenv("GOPATH")+"/src/github.com/ckeyer/tarofs/")
