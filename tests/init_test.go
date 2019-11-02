@@ -59,8 +59,10 @@ func (a *AppSuite) SetupSuite() {
 
 // TearDownSuite tear down
 func (a *AppSuite) TearDownSuite() {
-	fs.Umount(a.rootDir)
-	a.fs.Close()
+	if a.fs != nil {
+		a.fs.Close()
+	}
+
 	// os.RemoveAll(rootDir)
 	// os.RemoveAll(leveldir)
 }

@@ -27,9 +27,9 @@ func (a *AppSuite) TestMkdirAndRm() {
 		a.T().Logf("get file info aaa, %+v, %s", info, err)
 
 		a.Require().Nil(err, err)
-		a.Assert().NotNil(info)
-		a.Assert().True(info.IsDir())
-		a.Assert().Equal(info.Mode().Perm().String(), md.mode.String())
+		a.Require().NotNil(info)
+		a.Require().True(info.IsDir())
+		a.Require().Equal(info.Mode().Perm().String(), md.mode.String())
 
 		_, stderr, err = a.doExec("rm", "-rf", md.dir)
 		a.Require().Nil(err, "rm -rf %s failed, %s %s", md.dir, err, stderr)
@@ -46,9 +46,9 @@ func (a *AppSuite) TestMkdirAll() {
 
 		info, err := a.getFileInfo(md.dir)
 		a.Require().Nil(err, "get file %s info failed, %s", md.dir, err)
-		a.Assert().NotNil(info)
-		a.Assert().True(info.IsDir())
-		a.Assert().Equal(info.Mode().Perm().String(), md.mode.String())
+		a.Require().NotNil(info)
+		a.Require().True(info.IsDir())
+		a.Require().Equal(md.mode.String(), info.Mode().Perm().String())
 
 		_, stderr, err = a.doExec("rm", "-rf", md.dir)
 		a.Require().Nil(err, "rm -rf %s failed, %s %s", md.dir, err, stderr)
@@ -79,6 +79,6 @@ func (a *AppSuite) TestMkdirWithMode() {
 		a.Require().Nil(err, "mkdir %s failed, %s %s", md.dir, err, stderr)
 		info, _ := a.getFileInfo(md.dir)
 		a.Require().NotNil(info)
-		a.Assert().Equal(info.Mode().Perm().String(), md.mode.String(), "check mode %s failed", md.mode)
+		a.Require().Equal(info.Mode().Perm().String(), md.mode.String(), "check mode %s failed", md.mode)
 	}
 }

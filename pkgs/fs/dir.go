@@ -30,25 +30,34 @@ var _ fs.NodeMkdirer = (*Dir)(nil)
 var _ fs.NodeRemover = (*Dir)(nil)
 
 func (d *Dir) Attr(ctx context.Context, a *fuse.Attr) error {
-	defer d.log().Debugf("Attr: %+v", a)
+	defer d.log().Debugf("Attr: %+v", a.Mode)
 
-	inode := a.Inode
-	if inode == 1 {
-		a.Mode = os.ModeDir | os.ModePerm
+	if a.Mode&os.ModePerm != 0 {
+		a.Mode = 0755
+	}
+	if a.Size == 0 {
 		a.Size = 4
+	}
+
+	inode := d.inode
+	if inode == 1 {
+		a.Mode = os.ModeDir | a.Mode
+		d.log().Debugf("Attr: at root /")
 		return nil
 	} else if inode == 0 {
-		a.Mode = os.ModeDir | os.ModePerm
+		a.Mode = os.ModeDir | a.Mode
+		d.log().Debugf("Attr: at zero")
 		return nil
 	}
 
 	att, err := d.getMetadata(inode)
 	if err != nil {
-		logrus.Errorf("attr: getMetadata failed, %s", err)
+		d.log().Errorf("Attr: getMetadata failed, %s", err)
 		return err
 	}
 	d.log().Debugf("Attr: got metadata: %+v", att)
 
+	a.Inode = inode
 	a.Size = att.Size
 	a.Blocks = att.Blocks
 	a.Atime = att.Atime
@@ -70,7 +79,7 @@ func (d *Dir) Setattr(ctx context.Context, req *fuse.SetattrRequest, resp *fuse.
 	if req.Mode&^os.ModePerm != os.ModeDir {
 		return nil
 	}
-	d.log().Debugf("%s", req)
+	d.log().Debugf("Setattr: %s", req)
 	return d.setattr(ctx, req, resp, d.inode)
 }
 
@@ -93,12 +102,22 @@ func (d *Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 }
 
 func (d *Dir) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
-	d.log().Debugf("ReadDirAll")
+	d.log().Debugf("ReadDirAll: ")
 	children, err := d.listChildrenMetadata(d.path)
 	if err != nil {
 		return nil, err
 	}
-	dirs := make([]fuse.Dirent, 0, len(children))
+	dirs := make([]fuse.Dirent, 0, len(children)+2)
+	dirs = append(dirs, fuse.Dirent{
+		Inode: d.inode,
+		Type:  fuse.DT_Dir,
+		Name:  ".",
+	})
+	dirs = append(dirs, fuse.Dirent{
+		Inode: d.inode,
+		Type:  fuse.DT_Dir,
+		Name:  "..",
+	})
 	for name, attr := range children {
 		ftype := fuse.DT_File
 		if attr.Mode.IsDir() {
@@ -120,6 +139,9 @@ func (d *Dir) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
 // name
 func (d *Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error) {
 	req.Name = filepath.Clean(req.Name)
+	if req.Mode == 0000 {
+		req.Mode = 0755
+	}
 	var (
 		now      = time.Now()
 		fullpath = filepath.Join(d.path, req.Name)
@@ -136,23 +158,23 @@ func (d *Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error
 			Uid:    req.Uid,
 		}
 	)
-	d.log().Debugf("req.mode: %s, attr.mode: %s", req.Mode.String(), attr.Mode.String())
+	d.log().Debugf("Mkdir: req.mode: %s, attr.mode: %s", req.Mode.String(), attr.Mode.String())
 
 	if err := d.putPath(fullpath, inode); err != nil {
-		d.log(err).Errorf("put inode %s failed, %+v", fullpath, inode)
+		d.log(err).Errorf("Mkdir: put inode %s failed, %+v", fullpath, inode)
 		return nil, err
 	}
 
 	if err := d.addChildNode(d.path, req.Name); err != nil {
-		d.log(err).Errorf("put children failed, %+v", req)
+		d.log(err).Errorf("Mkdir: put children failed, %+v", req)
 		return nil, err
 	}
 
 	if err := d.putMetadata(attr); err != nil {
-		d.log(err).Errorf("put metadata failed, %+v", attr)
+		d.log(err).Errorf("Mkdir: put metadata failed, %+v", attr)
 		return nil, err
 	}
-	d.log().Debugf("Mkdir %s %+v", req.Name, attr)
+	d.log().Debugf("Mkdir: %s %+v", req.Name, attr)
 
 	return &Dir{FS: d.FS, path: fullpath, inode: inode}, nil
 }
@@ -211,7 +233,7 @@ func (d *Dir) log(err ...error) *logrus.Entry {
 	if d.dirLogger == nil {
 		d.dirLogger = logrus.New()
 		d.dirLogger.Formatter = new(logrus.JSONFormatter)
-		d.dirLogger.SetLevel(logrus.WarnLevel)
+		d.dirLogger.SetLevel(logrus.DebugLevel)
 	}
 	fields := logrus.Fields{
 		"path":   d.path,

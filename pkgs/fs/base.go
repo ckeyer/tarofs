@@ -108,7 +108,7 @@ func (f *FS) setattr(ctx context.Context, req *fuse.SetattrRequest, resp *fuse.S
 func (f *FS) attr(ctx context.Context, a *fuse.Attr, inode uint64) error {
 	if inode == 1 {
 		a.Inode = 1
-		a.Mode = os.ModeDir | os.ModePerm
+		a.Mode = os.ModeDir | a.Mode
 		return nil
 	}
 
@@ -236,12 +236,18 @@ func (f *FS) getChildren(parent string) ([]string, error) {
 
 // putMetadata
 func (f *FS) putMetadata(attr *fuse.Attr) error {
+	if attr.Inode == 0 {
+		return fmt.Errorf("to set zero inode")
+	}
 	key := PrefixMetadata + fmt.Sprint(attr.Inode)
 	return f.metadataStorager.Put(key, attr)
 }
 
 // getMetadata
 func (f *FS) getMetadata(inode uint64) (*fuse.Attr, error) {
+	if inode == 0 {
+		return nil, fmt.Errorf("got zero inode")
+	}
 	key := PrefixMetadata + fmt.Sprint(inode)
 	attr := &fuse.Attr{}
 
