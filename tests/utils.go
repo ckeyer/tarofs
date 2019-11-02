@@ -18,7 +18,7 @@ func (a AppSuite) doExec(name string, args ...string) (string, string, error) {
 }
 
 func (a AppSuite) getFileInfo(name string) (os.FileInfo, error) {
-	return os.Stat(absPath(name))
+	return os.Stat(a.absPath(name))
 }
 
 func (a AppSuite) absPath(name string) string {

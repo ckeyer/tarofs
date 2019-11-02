@@ -28,6 +28,9 @@ run: build
 test:
 	$(GO) test -v -cover -covermode=count $$(go list ./... |grep -v "vendor")
 
+integration-test:
+	$(GO) test -cover -covermode=count ./tests/
+
 test-in-docker:
 	docker run --rm -it \
 	 --name ${APP}-dev \

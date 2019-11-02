@@ -13,7 +13,6 @@ import (
 	"bazil.org/fuse/fs"
 	"github.com/ckeyer/tarofs/pkgs/storage"
 	"github.com/sirupsen/logrus"
-	"github.com/syndtr/goleveldb/leveldb/errors"
 )
 
 const (
@@ -192,7 +191,7 @@ func (f *FS) putPath(path string, inode uint64) error {
 	err := f.metadataStorager.Get(key, nil)
 	if err == nil {
 		return fuse.EEXIST
-	} else if err != errors.ErrNotFound {
+	} else if err != storage.ErrNotFound {
 		return err
 	}
 
@@ -226,7 +225,7 @@ func (f *FS) getChildren(parent string) ([]string, error) {
 	children := []string{}
 
 	if err := f.metadataStorager.Get(key, &children); err != nil {
-		if err == errors.ErrNotFound {
+		if err == storage.ErrNotFound {
 			return []string{}, nil
 		}
 		return nil, err

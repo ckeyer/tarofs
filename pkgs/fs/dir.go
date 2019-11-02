@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -38,7 +39,6 @@ func (d *Dir) Attr(ctx context.Context, a *fuse.Attr) error {
 		return nil
 	} else if inode == 0 {
 		a.Mode = os.ModeDir | os.ModePerm
-		a.Size = 1024
 		return nil
 	}
 
@@ -125,7 +125,6 @@ func (d *Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error
 		fullpath = filepath.Join(d.path, req.Name)
 		inode    = d.GenerateInode(d.inode, req.Name)
 		attr     = &fuse.Attr{
-			Size:   4,
 			Inode:  inode,
 			Atime:  now,
 			Mtime:  now,
@@ -221,7 +220,8 @@ func (d *Dir) log(err ...error) *logrus.Entry {
 		"file":   getLogFilePath(),
 	}
 	if len(err) > 0 && err[0] != nil {
-		fields["error"] = err[0]
+		fields["error"] = err[0].Error()
+		fields["error_type"] = fmt.Sprintf("%T", err[0].Error())
 	}
 	return d.dirLogger.WithFields(fields)
 }

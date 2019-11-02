@@ -3,9 +3,6 @@ package tests
 import (
 	"fmt"
 	"os"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 type mkdirData struct {
@@ -24,17 +21,18 @@ func (a *AppSuite) TestMkdirAndRm() {
 		mkdirData{"_aaaaa", 0755},
 	} {
 		_, stderr, err := a.doExec("mkdir", md.dir)
-		require.Nil(a.T(), err, "mkdir %s failed, %s %s", md.dir, err, stderr)
+		a.Require().Nil(err, "mkdir %s failed, %s %s", md.dir, err, stderr)
 
 		info, err := a.getFileInfo(md.dir)
-		a.Logf("get file info aaa, %+v, %s", info, err)
-		require.Nil(a.T(), err, err)
-		assert.NotNil(a.T(), info)
-		assert.True(a.T(), info.IsDir())
-		assert.Equal(a.T(), info.Mode().Perm().String(), md.mode.String())
+		a.T().Logf("get file info aaa, %+v, %s", info, err)
+
+		a.Require().Nil(err, err)
+		a.Assert().NotNil(info)
+		a.Assert().True(info.IsDir())
+		a.Assert().Equal(info.Mode().Perm().String(), md.mode.String())
 
 		_, stderr, err = a.doExec("rm", "-rf", md.dir)
-		require.Nil(a.T(), err, "rm -rf %s failed, %s %s", md.dir, err, stderr)
+		a.Require().Nil(err, "rm -rf %s failed, %s %s", md.dir, err, stderr)
 	}
 }
 
@@ -44,16 +42,16 @@ func (a *AppSuite) TestMkdirAll() {
 		mkdirData{"bbb/zxcv", 0755},
 	} {
 		_, stderr, err := a.doExec("mkdir", "-p", md.dir)
-		require.Nil(a.T(), err, "mkdir %s failed, %s %s", md.dir, err, stderr)
+		a.Require().Nil(err, "mkdir %s failed, %s %s", md.dir, err, stderr)
 
 		info, err := a.getFileInfo(md.dir)
-		require.Nil(a.T(), err, "get file %s info failed, %s", md.dir, err)
-		assert.NotNil(a.T(), info)
-		assert.True(a.T(), info.IsDir())
-		assert.Equal(a.T(), info.Mode().Perm().String(), md.mode.String())
+		a.Require().Nil(err, "get file %s info failed, %s", md.dir, err)
+		a.Assert().NotNil(info)
+		a.Assert().True(info.IsDir())
+		a.Assert().Equal(info.Mode().Perm().String(), md.mode.String())
 
 		_, stderr, err = a.doExec("rm", "-rf", md.dir)
-		require.Nil(a.T(), err, "rm -rf %s failed, %s %s", md.dir, err, stderr)
+		a.Require().Nil(err, "rm -rf %s failed, %s %s", md.dir, err, stderr)
 	}
 }
 
@@ -63,13 +61,11 @@ func (a *AppSuite) TestMkdirFaild() {
 		mkdirData{"ccc/zxcv", 0755},
 	} {
 		_, _, err := a.doExec("mkdir", md.dir)
-		require.NotNil(a.T(), err, err.Error())
+		a.Require().NotNil(err, err.Error())
 	}
 }
 
 func (a *AppSuite) TestMkdirWithMode() {
-	// logrus.SetLevel(logrus.DebugLevel)
-	// defer logrus.SetLevel(logrus.InfoLevel)
 	for _, md := range []mkdirData{
 		mkdirData{"d", 0755},
 		mkdirData{"dd", 0644},
@@ -79,10 +75,10 @@ func (a *AppSuite) TestMkdirWithMode() {
 		mkdirData{"dddddd", 0444},
 		mkdirData{"ddddddd", 0777},
 	} {
-		_, stderr, err := a.doExec("mkdir", md.dir, "--mode", fmt.Sprintf("%o", md.mode))
-		require.Nil(a.T(), err, "mkdir %s failed, %s %s", md.dir, err, stderr)
+		_, stderr, err := a.doExec("mkdir", "-m", fmt.Sprintf("%o", md.mode), md.dir)
+		a.Require().Nil(err, "mkdir %s failed, %s %s", md.dir, err, stderr)
 		info, _ := a.getFileInfo(md.dir)
-		require.NotNil(a.T(), info)
-		assert.Equal(a.T(), info.Mode().Perm().String(), md.mode.String(), "check mode %s failed", md.mode)
+		a.Require().NotNil(info)
+		a.Assert().Equal(info.Mode().Perm().String(), md.mode.String(), "check mode %s failed", md.mode)
 	}
 }

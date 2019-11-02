@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ckeyer/tarofs/pkgs/fs"
-	"github.com/sirupsen/logrus"
+	"github.com/ckeyer/tarofs/pkgs/storage/levelfs"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -37,43 +37,30 @@ func (a *AppSuite) SetupSuite() {
 		}
 	}
 
-	if p := a.conn.Protocol(); !p.HasInvalidate() {
-		logrus.Fatalf("kernel FUSE support is too old to have invalidations: version %v", p)
+	stgr, err := levelfs.NewLevelStorage(a.leveldir)
+	if err != nil {
+		a.Suite.Fail("new levelfs storage failed, %v", err)
+		return
 	}
-
-	filesys := fs.NewFS(a.conn, a.db)
+	a.fs, err = fs.NewFS(a.rootDir, stgr, stgr)
+	if err != nil {
+		a.Suite.Fail("new mount falied, ", err)
+		return
+	}
 	go func() {
-		if err := filesys.Serve(); err != nil {
-			logrus.Fatal("start file system serve failed, ", err)
-		}
-		// Check if the mount process has an error to report.
-		<-a.conn.Ready
-		if err := a.conn.MountError; err != nil {
-			logrus.Fatal("mount file system failed, ", err)
+		if err := a.fs.Serve(); err != nil {
+			a.Suite.Fail("start file system serve failed, ", err)
 		}
 	}()
-	time.Sleep(time.Second)
-	a.log("start testing.")
+
+	a.T().Logf("root dir: %s", a.rootDir)
+	a.T().Log("start testing.")
 }
 
 // TearDownSuite tear down
 func (a *AppSuite) TearDownSuite() {
-	fs.Umount(rootDir)
-	a.conn.Close()
-	a.db.Close()
+	fs.Umount(a.rootDir)
+	a.fs.Close()
 	// os.RemoveAll(rootDir)
 	// os.RemoveAll(leveldir)
-}
-
-func (a *AppSuite) Log(args ...interface{}) {
-	a.Suite.T().Log(args...)
-}
-func (a *AppSuite) Logf(format string, args ...interface{}) {
-	a.Suite.T().Logf(format, args...)
-}
-func (a *AppSuite) Err(args ...interface{}) {
-	a.Suite.T().Error(args...)
-}
-func (a *AppSuite) Errf(format string, args ...interface{}) {
-	a.Suite.T().Errorf(format, args...)
 }
