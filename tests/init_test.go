@@ -16,21 +16,21 @@ type AppSuite struct {
 
 	fs *fs.FS
 
-	leveldir, mountpoint string
+	leveldir, rootDir string
 }
 
 func TestSuite(t *testing.T) {
 	batch := time.Now().Format("0102T150405")
 	as := &AppSuite{
-		leveldir:   filepath.Join(os.TempDir(), batch, "leveldb"),
-		mountpoint: filepath.Join(os.TempDir(), batch, "taro"),
+		leveldir: filepath.Join(os.TempDir(), batch, "leveldb"),
+		rootDir:  filepath.Join(os.TempDir(), batch, "taro"),
 	}
 	suite.Run(t, as)
 }
 
 // SetupSuite setup
 func (a *AppSuite) SetupSuite() {
-	for _, path := range []string{a.leveldir, a.mountpoint} {
+	for _, path := range []string{a.leveldir, a.rootDir} {
 		if err := os.MkdirAll(path, 0755); err != nil {
 			a.Suite.Failf("SetupSuite Failed", "mkdir %s failed, %s", path, err)
 			return
@@ -58,10 +58,10 @@ func (a *AppSuite) SetupSuite() {
 
 // TearDownSuite tear down
 func (a *AppSuite) TearDownSuite() {
-	fs.Umount(mountpoint)
+	fs.Umount(rootDir)
 	a.conn.Close()
 	a.db.Close()
-	// os.RemoveAll(mountpoint)
+	// os.RemoveAll(rootDir)
 	// os.RemoveAll(leveldir)
 }
 

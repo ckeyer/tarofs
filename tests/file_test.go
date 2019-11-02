@@ -15,7 +15,7 @@ func (a *AppSuite) TestTouchAndRm() {
 		{Name: "faaa"},
 		{Name: ".faaa"},
 	} {
-		_, stderr, err := doExec("touch", v.Name)
+		_, stderr, err := a.doExec("touch", v.Name)
 		require.Nil(a.T(), err, "touch file %s failed, %s %s", v.Name, err, stderr)
 
 		info, err := getFileInfo(v.Name)
@@ -24,17 +24,17 @@ func (a *AppSuite) TestTouchAndRm() {
 		assert.NotNil(a.T(), info)
 		assert.False(a.T(), info.IsDir())
 
-		_, stderr, err = doExec("rm", "-f", v.Name)
+		_, stderr, err = a.doExec("rm", "-f", v.Name)
 		require.Nil(a.T(), err, "rm -f %s failed, %s %s", v.Name, err, stderr)
 	}
 }
 
 func (a *AppSuite) TestWriteReadAndRm() {
 	for _, v := range []touchData{
-		{"faaa"},
-		{".faaa"},
+		{"faaa", nil},
+		{".faaa", nil},
 	} {
-		_, stderr, err := doExec("touch", v.Name)
+		_, stderr, err := a.doExec("touch", v.Name)
 		require.Nil(a.T(), err, "touch file %s failed, %s %s", v.Name, err, stderr)
 
 		info, err := getFileInfo(v.Name)
@@ -43,7 +43,7 @@ func (a *AppSuite) TestWriteReadAndRm() {
 		assert.NotNil(a.T(), info)
 		assert.False(a.T(), info.IsDir())
 
-		_, stderr, err = doExec("rm", "-f", v.Name)
+		_, stderr, err = a.doExec("rm", "-f", v.Name)
 		require.Nil(a.T(), err, "rm -f %s failed, %s %s", v.Name, err, stderr)
 	}
 }

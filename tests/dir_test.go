@@ -23,17 +23,17 @@ func (a *AppSuite) TestMkdirAndRm() {
 		mkdirData{".aaaaa/", 0755},
 		mkdirData{"_aaaaa", 0755},
 	} {
-		_, stderr, err := doExec("mkdir", md.dir)
+		_, stderr, err := a.doExec("mkdir", md.dir)
 		require.Nil(a.T(), err, "mkdir %s failed, %s %s", md.dir, err, stderr)
 
-		info, err := getFileInfo(md.dir)
-		a.logf("get file info aaa, %+v, %s", info, err)
+		info, err := a.getFileInfo(md.dir)
+		a.Logf("get file info aaa, %+v, %s", info, err)
 		require.Nil(a.T(), err, err)
 		assert.NotNil(a.T(), info)
 		assert.True(a.T(), info.IsDir())
 		assert.Equal(a.T(), info.Mode().Perm().String(), md.mode.String())
 
-		_, stderr, err = doExec("rm", "-rf", md.dir)
+		_, stderr, err = a.doExec("rm", "-rf", md.dir)
 		require.Nil(a.T(), err, "rm -rf %s failed, %s %s", md.dir, err, stderr)
 	}
 }
@@ -43,16 +43,16 @@ func (a *AppSuite) TestMkdirAll() {
 		mkdirData{"bbb/123", 0755},
 		mkdirData{"bbb/zxcv", 0755},
 	} {
-		_, stderr, err := doExec("mkdir", "-p", md.dir)
+		_, stderr, err := a.doExec("mkdir", "-p", md.dir)
 		require.Nil(a.T(), err, "mkdir %s failed, %s %s", md.dir, err, stderr)
 
-		info, err := getFileInfo(md.dir)
+		info, err := a.getFileInfo(md.dir)
 		require.Nil(a.T(), err, "get file %s info failed, %s", md.dir, err)
 		assert.NotNil(a.T(), info)
 		assert.True(a.T(), info.IsDir())
 		assert.Equal(a.T(), info.Mode().Perm().String(), md.mode.String())
 
-		_, stderr, err = doExec("rm", "-rf", md.dir)
+		_, stderr, err = a.doExec("rm", "-rf", md.dir)
 		require.Nil(a.T(), err, "rm -rf %s failed, %s %s", md.dir, err, stderr)
 	}
 }
@@ -62,7 +62,7 @@ func (a *AppSuite) TestMkdirFaild() {
 		mkdirData{"ccc/123", 0755},
 		mkdirData{"ccc/zxcv", 0755},
 	} {
-		_, _, err := doExec("mkdir", md.dir)
+		_, _, err := a.doExec("mkdir", md.dir)
 		require.NotNil(a.T(), err, err.Error())
 	}
 }
@@ -79,9 +79,9 @@ func (a *AppSuite) TestMkdirWithMode() {
 		mkdirData{"dddddd", 0444},
 		mkdirData{"ddddddd", 0777},
 	} {
-		_, stderr, err := doExec("mkdir", md.dir, "--mode", fmt.Sprintf("%o", md.mode))
+		_, stderr, err := a.doExec("mkdir", md.dir, "--mode", fmt.Sprintf("%o", md.mode))
 		require.Nil(a.T(), err, "mkdir %s failed, %s %s", md.dir, err, stderr)
-		info, _ := getFileInfo(md.dir)
+		info, _ := a.getFileInfo(md.dir)
 		require.NotNil(a.T(), info)
 		assert.Equal(a.T(), info.Mode().Perm().String(), md.mode.String(), "check mode %s failed", md.mode)
 	}

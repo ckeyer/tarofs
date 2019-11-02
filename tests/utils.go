@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 )
 
-func doExec(name string, args ...string) (string, string, error) {
+func (a AppSuite) doExec(name string, args ...string) (string, string, error) {
 	cmd := exec.Command(name, args...)
-	cmd.Dir = mountpoint
+	cmd.Dir = a.rootDir
 	buferr, bufout := new(bytes.Buffer), new(bytes.Buffer)
 	cmd.Stderr = buferr
 	cmd.Stdout = bufout
@@ -17,10 +17,10 @@ func doExec(name string, args ...string) (string, string, error) {
 	return bufout.String(), buferr.String(), err
 }
 
-func getFileInfo(name string) (os.FileInfo, error) {
+func (a AppSuite) getFileInfo(name string) (os.FileInfo, error) {
 	return os.Stat(absPath(name))
 }
 
-func absPath(name string) string {
-	return filepath.Join(mountpoint, name)
+func (a AppSuite) absPath(name string) string {
+	return filepath.Join(a.rootDir, name)
 }
