@@ -33,7 +33,7 @@ func (f *File) Attr(ctx context.Context, a *fuse.Attr) error {
 	f.log().Debugf("Attr: %+v", a)
 	defer func() {
 		f.log().Debugf("Attr: %+v", a)
-		f.log().Debugf("set size: %v", a.Size)
+		f.log().Debugf("Attr: set size: %v", a.Size)
 	}()
 	return f.attr(ctx, a, f.inode)
 }
@@ -46,7 +46,7 @@ func (f *File) Setattr(ctx context.Context, req *fuse.SetattrRequest, resp *fuse
 	if req.Mode&^os.ModePerm != 0 {
 		return nil
 	}
-	f.log().Debugf("%+v", req)
+	f.log().Debugf("Setattr: %+v", req)
 	return f.setattr(ctx, req, resp, f.inode)
 }
 
@@ -85,7 +85,7 @@ func (f *File) log(err ...error) *logrus.Entry {
 	if f.flogger == nil {
 		f.flogger = logrus.New()
 		f.flogger.Formatter = new(logrus.JSONFormatter)
-		f.flogger.SetLevel(logrus.WarnLevel)
+		f.flogger.SetLevel(logrus.DebugLevel)
 	}
 	fields := logrus.Fields{
 		"path":   f.path,

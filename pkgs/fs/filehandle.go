@@ -19,7 +19,7 @@ var _ fs.HandleWriter = (*FileHandle)(nil)
 var _ fs.HandleReleaser = (*FileHandle)(nil)
 
 func (fh *FileHandle) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
-	fh.log().Debugf("Read %+v", req)
+	fh.log().Debugf("Read: %+v", req)
 
 	val, err := fh.getData(fh.inode)
 	if err != nil {
@@ -28,13 +28,13 @@ func (fh *FileHandle) Read(ctx context.Context, req *fuse.ReadRequest, resp *fus
 
 	resp.Data = val
 
-	fh.log().Debugf("Read %+v", resp)
+	fh.log().Debugf("Read: %+v", resp)
 	return nil
 }
 
 // Write to the file handle
 func (fh *FileHandle) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.WriteResponse) error {
-	fh.log().Debugf("Write %+v", req)
+	fh.log().Debugf("Write: %+v", req)
 
 	fh.writeData(fh.inode, req.Data)
 
@@ -43,13 +43,13 @@ func (fh *FileHandle) Write(ctx context.Context, req *fuse.WriteRequest, resp *f
 	// req.
 	fh.putMetadata(attr)
 	resp.Size = len(req.Data)
-	fh.log().Debugf("Write %s", req.Data)
+	fh.log().Debugf("Write: %s", req.Data)
 
 	return fh.writeData(fh.inode, req.Data)
 }
 
 func (fh *FileHandle) Release(ctx context.Context, req *fuse.ReleaseRequest) error {
-	fh.log().Debugf("Release %+v", req)
+	fh.log().Debugf("Release: %+v", req)
 
 	return nil
 }
@@ -58,7 +58,7 @@ func (fh *FileHandle) Release(ctx context.Context, req *fuse.ReleaseRequest) err
 // completely flushed
 func (fh *FileHandle) Flush(ctx context.Context, req *fuse.FlushRequest) error {
 
-	fh.log().Debugf("Flush %+v", req)
+	fh.log().Debugf("Flush: %+v", req)
 	return nil
 }
 
@@ -72,5 +72,5 @@ func (fh *FileHandle) log(err ...error) *logrus.Entry {
 	if len(err) > 0 && err[0] != nil {
 		fields["error"] = err[0]
 	}
-	return logrus.WithFields(fields)
+	return fh.flogger.WithFields(fields)
 }

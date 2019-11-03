@@ -229,25 +229,6 @@ func (d *Dir) Remove(ctx context.Context, req *fuse.RemoveRequest) error {
 	return d.remove(ctx, req, d.path)
 }
 
-func (d *Dir) log(err ...error) *logrus.Entry {
-	if d.dirLogger == nil {
-		d.dirLogger = logrus.New()
-		d.dirLogger.Formatter = new(logrus.JSONFormatter)
-		d.dirLogger.SetLevel(logrus.DebugLevel)
-	}
-	fields := logrus.Fields{
-		"path":   d.path,
-		"inode":  d.inode,
-		"module": "fs_dir",
-		"file":   getLogFilePath(),
-	}
-	if len(err) > 0 && err[0] != nil {
-		fields["error"] = err[0].Error()
-		fields["error_type"] = fmt.Sprintf("%T", err[0].Error())
-	}
-	return d.dirLogger.WithFields(fields)
-}
-
 // listChildrenMetadata
 func (f *FS) listChildrenMetadata(parent string) (map[string]*fuse.Attr, error) {
 	children, err := f.getChildren(parent)
@@ -273,4 +254,23 @@ func (f *FS) listChildrenMetadata(parent string) (map[string]*fuse.Attr, error) 
 		attrs[name] = attr
 	}
 	return attrs, nil
+}
+
+func (d *Dir) log(err ...error) *logrus.Entry {
+	if d.dirLogger == nil {
+		d.dirLogger = logrus.New()
+		d.dirLogger.Formatter = new(logrus.JSONFormatter)
+		// d.dirLogger.SetLevel(logrus.DebugLevel)
+	}
+	fields := logrus.Fields{
+		"path":   d.path,
+		"inode":  d.inode,
+		"module": "fs_dir",
+		"file":   getLogFilePath(),
+	}
+	if len(err) > 0 && err[0] != nil {
+		fields["error"] = err[0].Error()
+		fields["error_type"] = fmt.Sprintf("%T", err[0].Error())
+	}
+	return d.dirLogger.WithFields(fields)
 }
