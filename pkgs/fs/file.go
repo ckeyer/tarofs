@@ -31,22 +31,20 @@ var _ fs.NodeRemover = (*File)(nil)
 
 func (f *File) Attr(ctx context.Context, a *fuse.Attr) error {
 	f.log().Debugf("Attr: %+v", a)
-	defer func() {
-		f.log().Debugf("Attr: %+v", a)
-		f.log().Debugf("Attr: set size: %v", a.Size)
-	}()
+	defer f.log().Debugf("Attr: %+v", a)
 	return f.attr(ctx, a, f.inode)
 }
 
 func (f *File) Setattr(ctx context.Context, req *fuse.SetattrRequest, resp *fuse.SetattrResponse) error {
-	f.log().Debugf("Setattr: %+v", req)
-	if f.isOpen {
-		return nil
-	}
+	f.log().Debugf("Setattr: req. %+v", req)
+	f.log().Debugf("Setattr: resp. %+v", resp)
+	f.log().Debugf("Setattr: size. %v, mode. %v", req.Size, req.Mode)
+	// if f.isOpen {
+	// 	return nil
+	// }
 	if req.Mode&^os.ModePerm != 0 {
 		return nil
 	}
-	f.log().Debugf("Setattr: %+v", req)
 	return f.setattr(ctx, req, resp, f.inode)
 }
 

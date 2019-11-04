@@ -34,31 +34,33 @@ func (fh *FileHandle) Read(ctx context.Context, req *fuse.ReadRequest, resp *fus
 
 // Write to the file handle
 func (fh *FileHandle) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.WriteResponse) error {
-	fh.log().Debugf("Write: %+v", req)
+	fh.log().Debugf("Write: offset. %v req. %+v", req.Offset, req)
 
 	fh.writeData(fh.inode, req.Data)
 
 	attr, _ := fh.getMetadata(fh.inode)
-	attr.Size = uint64(len(req.Data))
-	// req.
-	fh.putMetadata(attr)
 	resp.Size = len(req.Data)
-	fh.log().Debugf("Write: %s", req.Data)
+	attr.Size = uint64(resp.Size)
 
-	return fh.writeData(fh.inode, req.Data)
+	if err := fh.putMetadata(attr); err != nil {
+		fh.log(err).Errorf("Write: putMetadata failed.")
+		return err
+	}
+
+	fh.log().Debugf("Write: data. %s", req.Data)
+
+	return nil
 }
 
 func (fh *FileHandle) Release(ctx context.Context, req *fuse.ReleaseRequest) error {
 	fh.log().Debugf("Release: %+v", req)
-
 	return nil
 }
 
 // Flush - experimenting with uploading at flush, this slows operations down till it has been
 // completely flushed
 func (fh *FileHandle) Flush(ctx context.Context, req *fuse.FlushRequest) error {
-
-	fh.log().Debugf("Flush: %+v", req)
+	fh.log().Debugf("Flush: %+v, %+v", req, ctx)
 	return nil
 }
 
