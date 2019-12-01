@@ -5,7 +5,18 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/ckeyer/tarofs/pkgs/fs"
+	"github.com/stretchr/testify/suite"
 )
+
+type AppSuite struct {
+	*suite.Suite
+
+	fs *fs.FS
+
+	leveldir, rootDir string
+}
 
 func (a AppSuite) doExec(name string, args ...string) (string, string, error) {
 	cmd := exec.Command(name, args...)

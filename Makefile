@@ -16,9 +16,11 @@ LD_FLAGS := -X ${PKG}/version.version=$(VERSION) \
 IMAGE := ckeyer/${APP}
 GO_IMAGE := ckeyer/dev:fuse
 
-build:
+local:
 	$(GO) build -v -ldflags="$(LD_FLAGS)" -o bundles/$(APP) main.go
 	$(HASH) bundles/$(APP)
+
+build: local
 
 run: build
 	# -fusermount -u /tmp/tarofs
@@ -29,7 +31,7 @@ test:
 	$(GO) test -v -cover -covermode=count $$(go list ./... |grep -v "vendor")
 
 integration-test:
-	$(GO) test -cover -covermode=count ./tests/
+	$(GO) test -v -cover -covermode=count ./tests/
 
 test-in-docker:
 	docker run --rm -it \

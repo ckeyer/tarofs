@@ -108,6 +108,10 @@ func (f *leveldbStorage) Delete(key string) error {
 	return nil
 }
 
+func (f *leveldbStorage) Close() error {
+	return f.db.Close()
+}
+
 func jsonEncode(val interface{}) []byte {
 	bs, _ := json.Marshal(val)
 	return bs

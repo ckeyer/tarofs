@@ -2,11 +2,9 @@ package fs
 
 import (
 	"os"
-	"time"
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
-	"bazil.org/fuse/fuseutil"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 )
@@ -57,17 +55,6 @@ func (f *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenR
 	return f.Handler(), nil
 }
 
-func (f *File) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
-	f.log().Debugf("Read: %+v", req)
-	t := time.Now().String()
-	fuseutil.HandleRead(req, resp, []byte(t))
-	return nil
-}
-
-func (f *File) ReadAll(ctx context.Context) ([]byte, error) {
-	return f.getData(f.inode)
-}
-
 func (f *File) Remove(ctx context.Context, req *fuse.RemoveRequest) error {
 	f.log().Debugf("Remove: %+v", req)
 	return f.remove(ctx, req, f.path)
@@ -76,7 +63,7 @@ func (f *File) Remove(ctx context.Context, req *fuse.RemoveRequest) error {
 // Handler
 func (f *File) Handler() fs.Handle {
 	f.log().Debugf("Handler: ")
-	return &FileHandle{File: f}
+	return f
 }
 
 func (f *File) log(err ...error) *logrus.Entry {

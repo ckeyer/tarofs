@@ -8,18 +8,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type FileHandle struct {
-	*File
-}
+// type File struct {
+// 	*File
+// }
 
-var _ fs.Handle = (*FileHandle)(nil)
-var _ fs.HandleReader = (*FileHandle)(nil)
-var _ fs.HandleFlusher = (*FileHandle)(nil)
-var _ fs.HandleWriter = (*FileHandle)(nil)
-var _ fs.HandleReleaser = (*FileHandle)(nil)
+var _ fs.Handle = (*File)(nil)
+var _ fs.HandleReader = (*File)(nil)
+var _ fs.HandleFlusher = (*File)(nil)
+var _ fs.HandleWriter = (*File)(nil)
+var _ fs.HandleReleaser = (*File)(nil)
 
-func (fh *FileHandle) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
-	fh.log().Debugf("Read: %+v", req)
+func (fh *File) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
+	fh.hdrlog().Debugf("Read: %+v", req)
 
 	val, err := fh.getData(fh.inode)
 	if err != nil {
@@ -28,13 +28,13 @@ func (fh *FileHandle) Read(ctx context.Context, req *fuse.ReadRequest, resp *fus
 
 	resp.Data = val
 
-	fh.log().Debugf("Read: %+v", resp)
+	fh.hdrlog().Debugf("Read: %+v", resp)
 	return nil
 }
 
 // Write to the file handle
-func (fh *FileHandle) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.WriteResponse) error {
-	fh.log().Debugf("Write: offset. %v req. %+v", req.Offset, req)
+func (fh *File) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.WriteResponse) error {
+	fh.hdrlog().Debugf("Write: offset. %v req. %+v", req.Offset, req)
 
 	fh.writeData(fh.inode, req.Data)
 
@@ -47,24 +47,24 @@ func (fh *FileHandle) Write(ctx context.Context, req *fuse.WriteRequest, resp *f
 		return err
 	}
 
-	fh.log().Debugf("Write: data. %s", req.Data)
+	fh.hdrlog().Debugf("Write: data. %s", req.Data)
 
 	return nil
 }
 
-func (fh *FileHandle) Release(ctx context.Context, req *fuse.ReleaseRequest) error {
-	fh.log().Debugf("Release: %+v", req)
+func (fh *File) Release(ctx context.Context, req *fuse.ReleaseRequest) error {
+	fh.hdrlog().Debugf("Release: %+v", req)
 	return nil
 }
 
 // Flush - experimenting with uploading at flush, this slows operations down till it has been
 // completely flushed
-func (fh *FileHandle) Flush(ctx context.Context, req *fuse.FlushRequest) error {
-	fh.log().Debugf("Flush: %+v, %+v", req, ctx)
+func (fh *File) Flush(ctx context.Context, req *fuse.FlushRequest) error {
+	fh.hdrlog().Debugf("Flush: %+v, %+v", req, ctx)
 	return nil
 }
 
-func (fh *FileHandle) log(err ...error) *logrus.Entry {
+func (fh *File) hdrlog(err ...error) *logrus.Entry {
 	fields := logrus.Fields{
 		"path":   fh.path,
 		"inode":  fh.inode,
