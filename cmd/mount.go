@@ -52,7 +52,7 @@ func MoundCmd() *cobra.Command {
 				if err := filesys.Close(); err != nil {
 					logrus.Fatalf("umount %s failed, %s", mountDir, err)
 				}
-				logrus.Fatalf("umount %s successful.", mountDir)
+				logrus.Infof("umount %s successful.", mountDir)
 			})
 
 			// if p := c.Protocol(); !p.HasInvalidate() {
