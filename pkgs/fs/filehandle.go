@@ -8,14 +8,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// type File struct {
-// 	*File
-// }
-
 var _ fs.Handle = (*File)(nil)
 var _ fs.HandleReader = (*File)(nil)
-var _ fs.HandleFlusher = (*File)(nil)
 var _ fs.HandleWriter = (*File)(nil)
+
+var _ fs.HandleFlusher = (*File)(nil)
 var _ fs.HandleReleaser = (*File)(nil)
 
 func (fh *File) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
@@ -60,7 +57,8 @@ func (fh *File) Release(ctx context.Context, req *fuse.ReleaseRequest) error {
 // Flush - experimenting with uploading at flush, this slows operations down till it has been
 // completely flushed
 func (fh *File) Flush(ctx context.Context, req *fuse.FlushRequest) error {
-	fh.hdrlog().Debugf("Flush: %+v, %+v", req, ctx)
+	fh.hdrlog().Debugf("Flush: %+v.", req)
+
 	return nil
 }
 

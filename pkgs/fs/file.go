@@ -63,6 +63,7 @@ func (f *File) Remove(ctx context.Context, req *fuse.RemoveRequest) error {
 // Handler
 func (f *File) Handler() fs.Handle {
 	f.log().Debugf("Handler: ")
+	f.isOpen = true
 	return f
 }
 
