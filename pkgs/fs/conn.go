@@ -14,11 +14,13 @@ func Mount(mountpoint string) (*fuse.Conn, error) {
 
 		fuse.NoAppleDouble(),
 		fuse.NoAppleXattr(),
+
 		fuse.ExclCreate(),
 		fuse.DaemonTimeout("3600"),
 		fuse.AllowOther(),
 		fuse.AllowSUID(),
-		fuse.DefaultPermissions(),
+
+		// fuse.DefaultPermissions(),
 		// fuse.MaxReadahead(1024*128), // TODO: not tested yet, possibly improving read performance
 		fuse.AsyncRead(),
 		fuse.WritebackCache(),
