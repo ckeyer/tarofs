@@ -6,6 +6,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ckeyer/tarofs/cmd/internal/inner"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -33,6 +34,8 @@ var (
 // Execute root command
 func Execute() {
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "D", false, "print debug message.")
+
+	rootCmd.AddCommand(inner.Command()...)
 	rootCmd.Execute()
 }
 

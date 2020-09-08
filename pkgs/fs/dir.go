@@ -30,7 +30,7 @@ var _ fs.NodeMkdirer = (*Dir)(nil)
 var _ fs.NodeRemover = (*Dir)(nil)
 
 func (d *Dir) Attr(ctx context.Context, a *fuse.Attr) error {
-	defer d.log().Debugf("Attr: %+v", a.Mode)
+	defer d.log().Debugf("dir Attr: %+v", a.Mode)
 
 	if a.Mode&os.ModePerm != 0 {
 		a.Mode = 0755

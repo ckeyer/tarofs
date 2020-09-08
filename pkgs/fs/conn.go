@@ -4,6 +4,7 @@ import (
 	"bazil.org/fuse"
 )
 
+// Mount .
 func Mount(mountpoint string) (*fuse.Conn, error) {
 	return fuse.Mount(
 		mountpoint,
@@ -27,6 +28,7 @@ func Mount(mountpoint string) (*fuse.Conn, error) {
 	)
 }
 
+// Umount .
 func Umount(mountpoint string) error {
 	return fuse.Unmount(mountpoint)
 }
