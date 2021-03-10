@@ -2,6 +2,7 @@ package fs
 
 import (
 	"os"
+	"syscall"
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
@@ -28,15 +29,16 @@ var _ fs.HandleReader = (*File)(nil)
 var _ fs.NodeRemover = (*File)(nil)
 
 func (f *File) Attr(ctx context.Context, a *fuse.Attr) error {
-	f.log().Debugf("Attr: %+v", a)
-	defer f.log().Debugf("Attr: %+v", a)
+	f.log().Debugf("file Attr: %+v", a)
+	defer f.log().Debugf("file after Attr: %+v", a)
 	return f.attr(ctx, a, f.inode)
 }
 
 func (f *File) Setattr(ctx context.Context, req *fuse.SetattrRequest, resp *fuse.SetattrResponse) error {
-	f.log().Debugf("Setattr: req. %+v", req)
-	f.log().Debugf("Setattr: resp. %+v", resp)
-	f.log().Debugf("Setattr: size. %v, mode. %v", req.Size, req.Mode)
+	f.log().WithFields(logrus.Fields{
+		"req":  req,
+		"resp": resp,
+	}).Debugf("file Setattr: req. %+v", req)
 	// if f.isOpen {
 	// 	return nil
 	// }
@@ -47,10 +49,11 @@ func (f *File) Setattr(ctx context.Context, req *fuse.SetattrRequest, resp *fuse
 }
 
 func (f *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
-	f.log().Debugf("Open: %+v", req)
-	// if !req.Flags.IsReadOnly() {
-	// 	return nil, fuse.Errno(syscall.EACCES)
-	// }
+	f.log().Debugf("file Open: %+v", req)
+	if !req.Flags.IsReadOnly() {
+		return nil, fuse.Errno(syscall.EACCES)
+	}
+
 	f.isOpen = true
 	return f.Handler(), nil
 }
@@ -63,21 +66,21 @@ func (f *File) Remove(ctx context.Context, req *fuse.RemoveRequest) error {
 // Handler
 func (f *File) Handler() fs.Handle {
 	f.log().Debugf("Handler: ")
-	f.isOpen = true
 	return f
 }
 
 func (f *File) log(err ...error) *logrus.Entry {
 	if f.flogger == nil {
 		f.flogger = logrus.New()
-		f.flogger.Formatter = new(logrus.JSONFormatter)
+		// f.flogger.Formatter = new(logrus.JSONFormatter)
 		f.flogger.SetLevel(logrus.DebugLevel)
 	}
 	fields := logrus.Fields{
-		"path":   f.path,
-		"inode":  f.inode,
-		"module": "fs_file",
-		"file":   getLogFilePath(),
+		"path":    f.path,
+		"inode":   f.inode,
+		"module":  "fs_file",
+		"is_open": f.isOpen,
+		"file":    getLogFilePath(),
 	}
 	if len(err) > 0 && err[0] != nil {
 		fields["error"] = err[0]

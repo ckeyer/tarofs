@@ -32,6 +32,7 @@ type FS struct {
 	srv  *fs.Server
 }
 
+// NewFS .
 func NewFS(mountDir string, ms storage.MetadataStorager, ds storage.DataStorager) (*FS, error) {
 	conn, err := Mount(mountDir)
 	if err != nil {
@@ -53,7 +54,7 @@ func NewFS(mountDir string, ms storage.MetadataStorager, ds storage.DataStorager
 	}, nil
 }
 
-// Serve
+// Serve .
 func (f *FS) Serve() error {
 	logrus.Debug("start levelfs server.")
 	return f.srv.Serve(f)
@@ -74,11 +75,12 @@ func (f *FS) Close() error {
 var _ fs.FS = (*FS)(nil)
 var _ fs.FSInodeGenerator = (*FS)(nil)
 
+// Root .
 func (f *FS) Root() (fs.Node, error) {
 	return &Dir{FS: f, path: "/", inode: 1}, nil
 }
 
-// name
+// GenerateInode .
 func (f *FS) GenerateInode(parentInode uint64, name string) uint64 {
 	return uint64(time.Now().UnixNano())
 }
